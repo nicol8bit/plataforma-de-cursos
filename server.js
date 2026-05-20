@@ -1,7 +1,6 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
-const bcrypt = require('bcrypt');
 
 const app = express();
 app.use(cors());
@@ -16,30 +15,29 @@ const db = mysql.createConnection({
 });
 
 // HU01 - Cadastro de Usuário
-app.post('/cadastro', async (req, res) => {
+app.post('/cadastro', (req, res) => {
     const { nome, email, senha } = req.body;
-    try {
-        const hash = await bcrypt.hash(senha, 10); // Criptografia da senha
-        db.query('INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)', 
-        [nome, email, hash], (err, result) => {
-            if (err) return res.status(500).json({ erro: 'Erro ao cadastrar ou e-mail já existe.' });
-            res.status(201).json({ mensagem: 'Usuário cadastrado com sucesso!' });
-        });
-    } catch (err) {
-        res.status(500).json({ erro: 'Erro interno' });
-    }
+    
+    db.query('INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)', 
+    [nome, email, senha], (err, result) => {
+        if (err) return res.status(500).json({ erro: 'Erro ao cadastrar ou e-mail já existe.' });
+        res.status(201).json({ mensagem: 'Usuário cadastrado com sucesso!' });
+    });
 });
 
 // HU02 - Login
 app.post('/login', (req, res) => {
     const { email, senha } = req.body;
-    db.query('SELECT * FROM usuarios WHERE email = ?', [email], async (err, results) => {
+    
+    db.query('SELECT * FROM usuarios WHERE email = ?', [email], (err, results) => {
         if (err || results.length === 0) return res.status(401).json({ erro: 'Usuário não encontrado.' });
         
         const usuario = results[0];
-        const senhaValida = await bcrypt.compare(senha, usuario.senha);
         
-        if (!senhaValida) return res.status(401).json({ erro: 'Senha incorreta.' });
+        if (senha !== usuario.senha) {
+            return res.status(401).json({ erro: 'Senha incorreta.' });
+        }
+        
         res.status(200).json({ mensagem: 'Login realizado com sucesso!', id: usuario.id });
     });
 });
