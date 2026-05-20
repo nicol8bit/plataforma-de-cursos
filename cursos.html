@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cursos</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: #f3f4f6;
+            padding: 40px 20px;
+        }
+
+        .cabecalho {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 900px;
+            margin: 0 auto 30px auto;
+        }
+
+        .logo {
+            color: #4f46e5;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .btn-sair {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-sair:hover {
+            background-color: #dc2626;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h2 {
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+
+        #lista-cursos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .card-curso {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card-curso:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-curso h3 {
+            color: #4f46e5;
+            margin-bottom: 10px;
+            font-size: 1.25rem;
+        }
+
+        .card-curso p {
+            color: #6b7280;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cabecalho">
+        <div class="logo">Plataforma de Cursos</div>
+        <button class="btn-sair" onclick="fazerLogout()">Sair da Conta</button>
+    </div>
+
+    <div class="container">
+        <h2>Cursos Disponíveis</h2>
+        <div id="lista-cursos">Carregando cursos...</div>
+    </div>
+
+    <script>
+        // Executa automaticamente assim que a página carrega
+        window.onload = () => {
+            const logado = localStorage.getItem('usuarioLogadoId');
+            if(!logado) {
+                window.location.href = 'login.html';
+                return;
+            }
+            carregarCursos();
+        };
+
+        async function carregarCursos() {
+            try {
+                const res = await fetch('http://localhost:3000/cursos');
+                const cursos = await res.json();
+                const divLista = document.getElementById('lista-cursos');
+                
+                if (cursos.length === 0) {
+                    divLista.innerHTML = "<p>Nenhum curso cadastrado no banco de dados ainda.</p>";
+                    return;
+                }
+
+                divLista.innerHTML = cursos.map(curso => `
+                    <div class="card-curso">
+                        <h3>${curso.titulo}</h3>
+                        <p>${curso.descricao}</p>
+                    </div>
+                `).join('');
+            } catch (error) {
+                document.getElementById('lista-cursos').innerHTML = "<p>Erro ao conectar com o banco de dados.</p>";
+            }
+        }
+
+        function fazerLogout() {
+            localStorage.removeItem('usuarioLogadoId');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

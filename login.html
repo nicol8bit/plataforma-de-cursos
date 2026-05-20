@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Plataforma de Cursos</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .logo {
+            color: #4f46e5;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h2 {
+            color: #1f2937;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .divisor {
+            margin: 30px 0;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+        }
+
+        .divisor span {
+            background: white;
+            padding: 0 10px;
+            color: #9ca3af;
+            position: relative;
+            top: -10px;
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        button {
+            width: 100%;
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background-color: #4338ca;
+        }
+
+        .btn-cadastro {
+            background-color: #10b981;
+        }
+
+        .btn-cadastro:hover {
+            background-color: #059669;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 class="logo">Plataforma de Cursos</h1>
+
+    <div class="container">
+        <h2>Criar Conta</h2>
+        <input type="text" id="cad-nome" placeholder="Nome completo" autocomplete="off">
+        <input type="email" id="cad-email" placeholder="E-mail" autocomplete="off">
+        <input type="password" id="cad-senha" placeholder="Crie uma senha" autocomplete="new-password">
+        <button class="btn-cadastro" onclick="cadastrar()">Cadastrar-se</button>
+
+        <div class="divisor"><span>ou acesse sua conta</span></div>
+
+        <h2>Fazer Login</h2>
+        <input type="email" id="log-email" placeholder="E-mail" autocomplete="off">
+        <input type="password" id="log-senha" placeholder="Senha" autocomplete="new-password">
+        <button onclick="fazerLogin()">Entrar</button>
+    </div>
+
+    <script>
+        async function cadastrar() {
+            const nome = document.getElementById('cad-nome').value;
+            const email = document.getElementById('cad-email').value;
+            const senha = document.getElementById('cad-senha').value;
+
+            if(!nome || !email || !senha) return alert("Preencha todos os campos do cadastro.");
+
+            try {
+                const res = await fetch('http://localhost:3000/cadastro', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome, email, senha })
+                });
+                const data = await res.json();
+                alert(data.mensagem || data.erro);
+                
+                if(res.ok) {
+                    document.getElementById('cad-nome').value = '';
+                    document.getElementById('cad-email').value = '';
+                    document.getElementById('cad-senha').value = '';
+                }
+            } catch (error) {
+                alert("Erro ao conectar com o servidor.");
+            }
+        }
+
+        async function fazerLogin() {
+            const email = document.getElementById('log-email').value;
+            const senha = document.getElementById('log-senha').value;
+
+            if(!email || !senha) return alert("Preencha e-mail e senha para entrar.");
+
+            try {
+                const res = await fetch('http://localhost:3000/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, senha })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.setItem('usuarioLogadoId', data.id);
+                    window.location.href = 'cursos.html';
+                } else {
+                    alert(data.erro);
+                }
+            } catch (error) {
+                alert("Erro ao conectar com o servidor.");
+            }
+        }
+    </script>
+</body>
+</html>
