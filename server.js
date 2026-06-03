@@ -50,4 +50,72 @@ app.get('/cursos', (req, res) => {
     });
 });
 
+// Buscar dados do usuário logado
+app.get('/usuarios/:id', (req, res) => {
+    const usuarioId = req.params.id;
+    db.query('SELECT nome, email FROM usuarios WHERE id = ?', [usuarioId], (err, results) => {
+        if (err) return res.status(500).json({ erro: 'Erro ao buscar usuário.' });
+        if (results.length === 0) return res.status(404).json({ erro: 'Usuário não encontrado.' });
+        res.status(200).json(results[0]);
+    });
+});
+
+// HU03 - Editar dados do usuário
+app.put('/usuarios/:id', (req, res) => {
+    const usuarioId = req.params.id;
+    const { nome, email } = req.body;
+
+    db.query('UPDATE usuarios SET nome = ?, email = ? WHERE id = ?', 
+    [nome, email, usuarioId], (err, result) => {
+        if (err) return res.status(500).json({ erro: 'Erro ao atualizar dados ou e-mail já existe.' });
+        if (result.affectedRows === 0) return res.status(404).json({ erro: 'Usuário não encontrado.' });
+        res.status(200).json({ mensagem: 'Dados atualizados com sucesso!' });
+    });
+});
+
+// HU04 - Exclusão de conta
+app.delete('/usuarios/:id', (req, res) => {
+    const usuarioId = req.params.id;
+
+    db.query('DELETE FROM usuarios WHERE id = ?', [usuarioId], (err, result) => {
+        if (err) return res.status(500).json({ erro: 'Erro ao excluir conta.' });
+        if (result.affectedRows === 0) return res.status(404).json({ erro: 'Usuário não encontrado.' });
+        res.status(200).json({ mensagem: 'Conta e dados pessoais excluídos com sucesso.' });
+    });
+});
+
+// HU06 - Inscrição em curso
+app.post('/inscricoes', (req, res) => {
+    const { usuario_id, curso_id } = req.body;
+
+    db.query('SELECT * FROM inscricoes WHERE usuario_id = ? AND curso_id = ?', 
+    [usuario_id, curso_id], (err, results) => {
+        if (err) return res.status(500).json({ erro: 'Erro ao verificar inscrição.' });
+        if (results.length > 0) return res.status(400).json({ erro: 'Você já está inscrito neste curso.' });
+
+        db.query('INSERT INTO inscricoes (usuario_id, curso_id) VALUES (?, ?)', 
+        [usuario_id, curso_id], (err, result) => {
+            if (err) return res.status(500).json({ erro: 'Erro ao realizar inscrição.' });
+            res.status(201).json({ mensagem: 'Inscrição realizada com sucesso!' });
+        });
+    });
+});
+
+// HU07 - Acompanhar progresso
+app.get('/inscricoes/:usuario_id', (req, res) => {
+    const usuarioId = req.params.usuario_id;
+
+    const query = `
+        SELECT i.id as inscricao_id, c.id as curso_id, c.titulo, c.descricao, i.progresso 
+        FROM inscricoes i
+        JOIN cursos c ON i.curso_id = c.id
+        WHERE i.usuario_id = ?
+    `;
+
+    db.query(query, [usuarioId], (err, results) => {
+        if (err) return res.status(500).json({ erro: 'Erro ao buscar inscrições.' });
+        res.status(200).json(results);
+    });
+});
+
 app.listen(3000, () => console.log('Servidor rodando na porta 3000'));

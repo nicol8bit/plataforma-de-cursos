@@ -31,14 +31,30 @@
             font-weight: bold;
         }
 
-        .btn-sair {
-            background-color: #ef4444;
-            color: white;
-            border: none;
+        .botoes-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-nav {
             padding: 10px 20px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
+            border: none;
+            color: white;
+        }
+
+        .btn-perfil {
+            background-color: #374151;
+        }
+
+        .btn-perfil:hover {
+            background-color: #1f2937;
+        }
+
+        .btn-sair {
+            background-color: #ef4444;
         }
 
         .btn-sair:hover {
@@ -71,6 +87,9 @@
             border-radius: 10px;
             padding: 20px;
             transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .card-curso:hover {
@@ -88,6 +107,51 @@
             color: #6b7280;
             line-height: 1.5;
             font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+
+        .btn-inscrever {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        .btn-inscrever:hover {
+            background-color: #059669;
+        }
+
+        .progresso-container {
+            background-color: #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+            width: 100%;
+            height: 20px;
+            margin-top: auto;
+            position: relative;
+        }
+
+        .progresso-barra {
+            background-color: #4f46e5;
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .progresso-texto {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 0;
+            left: 0;
+            font-size: 0.8rem;
+            font-weight: bold;
+            line-height: 20px;
+            color: #1f2937;
         }
     </style>
 </head>
@@ -95,7 +159,10 @@
 
     <div class="cabecalho">
         <div class="logo">Plataforma de Cursos</div>
-        <button class="btn-sair" onclick="fazerLogout()">Sair</button>
+        <div class="botoes-nav">
+            <button class="btn-nav btn-perfil" onclick="irParaPerfil()">Meu Perfil</button>
+            <button class="btn-nav btn-sair" onclick="fazerLogout()">Sair</button>
+        </div>
     </div>
 
     <div class="container">
@@ -104,9 +171,10 @@
     </div>
 
     <script>
+        const usuarioId = localStorage.getItem('usuarioLogadoId');
+
         window.onload = () => {
-            const logado = localStorage.getItem('usuarioLogadoId');
-            if(!logado) {
+            if(!usuarioId) {
                 window.location.href = 'login.html';
                 return;
             }
@@ -115,24 +183,73 @@
 
         async function carregarCursos() {
             try {
-                const res = await fetch('http://localhost:3000/cursos');
-                const cursos = await res.json();
+                const resCursos = await fetch('http://localhost:3000/cursos');
+                const cursos = await resCursos.json();
+
+                const resInscricoes = await fetch(`http://localhost:3000/inscricoes/${usuarioId}`);
+                const inscricoes = await resInscricoes.json();
+
                 const divLista = document.getElementById('lista-cursos');
                 
                 if (cursos.length === 0) {
-                    divLista.innerHTML = "<p>Nenhum curso cadastrado no banco de dados ainda.</p>";
+                    divLista.innerHTML = "<p>Nenhum curso cadastrado.</p>";
                     return;
                 }
 
-                divLista.innerHTML = cursos.map(curso => `
-                    <div class="card-curso">
-                        <h3>${curso.titulo}</h3>
-                        <p>${curso.descricao}</p>
-                    </div>
-                `).join('');
+                divLista.innerHTML = cursos.map(curso => {
+                    const inscricaoEncontrada = inscricoes.find(i => i.curso_id === curso.id);
+
+                    let areaAcao = '';
+                    if (inscricaoEncontrada) {
+                        areaAcao = `
+                            <div class="progresso-container" title="Seu progresso neste curso">
+                                <div class="progresso-barra" style="width: ${inscricaoEncontrada.progresso}%;"></div>
+                                <div class="progresso-texto">${inscricaoEncontrada.progresso}% Concluído</div>
+                            </div>
+                        `;
+                    } else {
+                        areaAcao = `<button class="btn-inscrever" onclick="inscrever(${curso.id})">Inscrever-se</button>`;
+                    }
+
+                    return `
+                        <div class="card-curso">
+                            <div>
+                                <h3>${curso.titulo}</h3>
+                                <p>${curso.descricao}</p>
+                            </div>
+                            ${areaAcao}
+                        </div>
+                    `;
+                }).join('');
+
             } catch (error) {
-                document.getElementById('lista-cursos').innerHTML = "<p>Erro ao conectar com o banco de dados.</p>";
+                document.getElementById('lista-cursos').innerHTML = "<p>Erro ao conectar com o servidor.</p>";
             }
+        }
+
+        async function inscrever(cursoId) {
+            try {
+                const res = await fetch('http://localhost:3000/inscricoes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario_id: usuarioId, curso_id: cursoId })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert(data.mensagem);
+                    carregarCursos(); 
+                } else {
+                    alert(data.erro);
+                }
+            } catch (error) {
+                alert("Erro ao tentar se inscrever.");
+            }
+        }
+
+        function irParaPerfil() {
+            window.location.href = 'perfil.html';
         }
 
         function fazerLogout() {

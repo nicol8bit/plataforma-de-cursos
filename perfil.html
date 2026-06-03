@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: #f3f4f6;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .cabecalho {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            color: #4f46e5;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .btn-voltar {
+            background-color: #6b7280;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .btn-voltar:hover {
+            background-color: #4b5563;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #374151;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn-salvar {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        .btn-salvar:hover {
+            background-color: #059669;
+        }
+
+        .zona-perigo {
+            border: 1px solid #fca5a5;
+            background-color: #fef2f2;
+        }
+
+        .zona-perigo h2 {
+            color: #dc2626;
+        }
+
+        .btn-excluir {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        .btn-excluir:hover {
+            background-color: #b91c1c;
+        }
+
+        .lgpd-aviso {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cabecalho">
+        <div class="logo">Perfil</div>
+        <button class="btn-voltar" onclick="window.location.href='cursos.html'">Voltar aos Cursos</button>
+    </div>
+
+    <div class="container">
+        <h2>Atualizar Dados Pessoais</h2>
+        
+        <label for="edit-nome">Nome Completo</label>
+        <input type="text" id="edit-nome" placeholder="Carregando...">
+
+        <label for="edit-email">Endereço de E-mail</label>
+        <input type="email" id="edit-email" placeholder="Carregando...">
+
+        <button class="btn-salvar" onclick="salvarDados()">Salvar Alterações</button>
+    </div>
+
+    <div class="container zona-perigo">
+        <h2>Excluir Conta</h2>
+        <p class="lgpd-aviso">
+            <strong>Aviso LGPD:</strong> Ao excluir sua conta, todos os seus dados pessoais e o seu progresso nos cursos serão permanentemente apagados do nosso banco de dados. Esta ação não pode ser desfeita.
+        </p>
+        <button class="btn-excluir" onclick="excluirConta()">Excluir</button>
+    </div>
+
+    <script>
+        const usuarioId = localStorage.getItem('usuarioLogadoId');
+
+        window.onload = () => {
+            if(!usuarioId) {
+                window.location.href = 'login.html';
+                return;
+            }
+            carregarDadosUsuario();
+        };
+
+        async function carregarDadosUsuario() {
+            try {
+                const res = await fetch(`http://localhost:3000/usuarios/${usuarioId}`);
+                if (res.ok) {
+                    const dados = await res.json();
+                    document.getElementById('edit-nome').value = dados.nome;
+                    document.getElementById('edit-email').value = dados.email;
+                }
+            } catch (error) {
+                console.error("Erro ao carregar dados do usuário.");
+            }
+        }
+
+        async function salvarDados() {
+            const nome = document.getElementById('edit-nome').value;
+            const email = document.getElementById('edit-email').value;
+
+            if(!nome || !email) return alert("Os campos não podem ficar vazios.");
+
+            try {
+                const res = await fetch(`http://localhost:3000/usuarios/${usuarioId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome, email })
+                });
+
+                const data = await res.json();
+                alert(data.mensagem || data.erro);
+
+            } catch (error) {
+                alert("Erro ao salvar alterações.");
+            }
+        }
+
+
+        async function excluirConta() {
+            const confirmacao = confirm("Tem certeza que deseja excluir sua conta e perder seu progresso?");
+            
+            if (confirmacao) {
+                try {
+                    const res = await fetch(`http://localhost:3000/usuarios/${usuarioId}`, {
+                        method: 'DELETE'
+                    });
+
+                    const data = await res.json();
+                    alert(data.mensagem || data.erro);
+
+                    if (res.ok) {
+                        localStorage.removeItem('usuarioLogadoId');
+                        window.location.href = 'login.html';
+                    }
+                } catch (error) {
+                    alert("Erro ao excluir conta.");
+                }
+            }
+        }
+    </script>
+</body>
+</html>
