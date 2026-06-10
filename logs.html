@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Logs de Acesso</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: #f3f4f6;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .cabecalho {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            color: #4f46e5;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .btn-voltar {
+            background-color: #374151;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .btn-voltar:hover {
+            background-color: #4b5563;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        p.descricao {
+            color: #6b7280;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background-color: #f9fafb;
+            color: #374151;
+            font-weight: bold;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+        tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .evento-login {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .evento-logout {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .mensagem-vazia {
+            text-align: center;
+            color: #6b7280;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="cabecalho">
+        <div class="logo">Segurança</div>
+        <button class="btn-voltar" onclick="window.location.href='perfil.html'">Voltar ao Perfil</button>
+    </div>
+
+    <div class="container">
+        <h2>Meus Registros de Autenticação</h2>
+        <p class="descricao">Abaixo está o histórico completo dos seus acessos. Para sua segurança, mantemos os
+            registros de data, hora e IP de todos os seus logins e logouts.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Evento</th>
+                    <th>Data e Hora</th>
+                    <th>Endereço IP</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-logs">
+                <tr>
+                    <td colspan="3" class="mensagem-vazia">Carregando seus registros...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const usuarioId = localStorage.getItem('usuarioLogadoId');
+
+        window.onload = () => {
+            if (!usuarioId) {
+                window.location.href = 'login.html';
+                return;
+            }
+            carregarLogs();
+        };
+
+        async function carregarLogs() {
+            try {
+                const res = await fetch(`http://localhost:3000/logs/${usuarioId}`);
+                const logs = await res.json();
+                const tbody = document.getElementById('tabela-logs');
+
+                if (logs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="mensagem-vazia">Nenhum registro encontrado.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = logs.map(log => {
+                    const dataFormatada = new Date(log.data_hora).toLocaleString('pt-BR');
+                    const classeEvento = log.evento === 'LOGIN' ? 'evento-login' : 'evento-logout';
+
+                    return `
+                        <tr>
+                            <td class="${classeEvento}">${log.evento}</td>
+                            <td>${dataFormatada}</td>
+                            <td>${log.ip}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                document.getElementById('tabela-logs').innerHTML = '<tr><td colspan="3" class="mensagem-vazia">Erro ao carregar os dados.</td></tr>';
+            }
+        }
+    </script>
+</body>
+</html>

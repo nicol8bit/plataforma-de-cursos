@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -97,8 +98,36 @@
         .btn-cadastro:hover {
             background-color: #059669;
         }
+
+        .marketing-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #f9fafb;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .marketing-box input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .marketing-box label {
+            margin: 0;
+            font-weight: normal;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #4b5563;
+        }
     </style>
 </head>
+
 <body>
 
     <h1 class="logo">Plataforma de Cursos</h1>
@@ -106,8 +135,14 @@
     <div class="container">
         <h2>Criar Conta</h2>
         <input type="text" id="cad-nome" placeholder="Nome completo" autocomplete="off">
-        <input type="email" id="cad-email" placeholder="E-mail" autocomplete="off">
+        <input type="email" id="cad-email" placeholder="E-mail" autocomplete="off"> 
         <input type="password" id="cad-senha" placeholder="Crie uma senha" autocomplete="new-password">
+
+        <div class="marketing-box">
+            <input type="checkbox" id="cad-marketing">
+            <label for="cad-marketing">Autorizo o uso do meu e-mail para receber sugestões de cursos e novidades exclusivas.</label>
+        </div>
+
         <button class="btn-cadastro" onclick="cadastrar()">Cadastrar-se</button>
 
         <div class="divisor"><span>ou acesse sua conta</span></div>
@@ -123,22 +158,23 @@
             const nome = document.getElementById('cad-nome').value;
             const email = document.getElementById('cad-email').value;
             const senha = document.getElementById('cad-senha').value;
+            const aceita_marketing = document.getElementById('cad-marketing').checked;
 
-            if(!nome || !email || !senha) return alert("Preencha todos os campos do cadastro.");
+            if (!nome || !email || !senha) return alert("Preencha todos os campos do cadastro.");
 
             try {
                 const res = await fetch('http://localhost:3000/cadastro', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nome, email, senha })
+                    body: JSON.stringify({ nome, email, senha, aceita_marketing })
                 });
                 const data = await res.json();
                 alert(data.mensagem || data.erro);
-                
-                if(res.ok) {
+                if (res.ok) {
                     document.getElementById('cad-nome').value = '';
                     document.getElementById('cad-email').value = '';
                     document.getElementById('cad-senha').value = '';
+                    document.getElementById('cad-marketing').checked = false;
                 }
             } catch (error) {
                 alert("Erro ao conectar com o servidor.");
@@ -149,7 +185,7 @@
             const email = document.getElementById('log-email').value;
             const senha = document.getElementById('log-senha').value;
 
-            if(!email || !senha) return alert("Preencha e-mail e senha para entrar.");
+            if (!email || !senha) return alert("Preencha e-mail e senha para entrar.");
 
             try {
                 const res = await fetch('http://localhost:3000/login', {

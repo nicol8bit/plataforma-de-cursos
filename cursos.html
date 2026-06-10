@@ -252,7 +252,17 @@
             window.location.href = 'perfil.html';
         }
 
-        function fazerLogout() {
+        async function fazerLogout() {
+            try {
+                await fetch('http://localhost:3000/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario_id: usuarioId })
+                });
+            } catch (error) {
+                console.error("Erro ao registrar log de saída");
+            }
+            
             localStorage.removeItem('usuarioLogadoId');
             window.location.href = 'login.html';
         }
